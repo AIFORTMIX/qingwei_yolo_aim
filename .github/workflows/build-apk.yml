@@ -39,18 +39,31 @@ jobs:
           # gradle 9 内置对 JDK21 完整支持
           cache: gradle
 
-      # ubuntu runner 已预装 Android SDK。不借用 setup-android（其会安装已废弃的
-      # "tools" 包导致失败），直接用自带 sdkmanager 定位并安装所需组件。
-      - name: Locate sdkmanager
+      # runner 预装的 cmdline-tools 版本较旧，可能不认识较新的
+      # "android-37" 平台。先自举安装最新 cmdline-tools 到独立 SDK 根目录，
+      # 后续安装组件与整个构建都使用该 SDK 根，确保平台识别正确。
+      - name: Refresh cmdline-tools (latest)
         run: |
-          SDKMANAGER="$(ls -d ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+          BOOTSTRAP="$(ls -d ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
                              ${ANDROID_HOME}/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
-          if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager not found under ANDROID_HOME=$ANDROID_HOME"
+          if [ -z "$BOOTSTRAP" ] || [ ! -x "$BOOTSTRAP" ]; then
+            echo "::error::sdkmanager not found under ANDROID_HOME" >&2
+            exit 1
+          fi
+          SDK_ROOT="$RUNNER_TEMP/android-sdk"
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          echo "Bootstrap latest cmdline-tools into $SDK_ROOT"
+          echo "yes" | "$BOOTSTRAP" --sdk_root="$SDK_ROOT" --install "cmdline-tools;latest" > /dev/null 2>&1 || true
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            ls -R "$SDK_ROOT/cmdline-tools" >&2 || true
+            echo "::error::failed to install latest cmdline-tools" >&2
             exit 1
           fi
           echo "Using sdkmanager: $SDKMANAGER"
           echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
 
       - name: Install SDK components
         run: |
