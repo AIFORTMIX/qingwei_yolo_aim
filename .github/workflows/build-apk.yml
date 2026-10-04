@@ -85,13 +85,14 @@ jobs:
         run: |
           NCNN_ROOT="$NCNN_DIR/ncnn-${NCNN_VERSION}-android"
           TARGET="$GITHUB_WORKSPACE/app/src/main/cpp/ncnn"
-          # include 头文件各 ABI 一致，取 arm64-v8a 一份即可
+          # 头文件各 ABI 一致，取 arm64-v8a 一份。源码以 #include "net.h"
+          # 引入，因此把头文件直接铺到 include/ 下（不保留 ncnn 子目录）。
           mkdir -p "$TARGET/include" "$TARGET/lib/arm64-v8a" "$TARGET/lib/armeabi-v7a"
-          cp -r "$NCNN_ROOT/arm64-v8a/include/ncnn" "$TARGET/include/"
+          cp -r "$NCNN_ROOT/arm64-v8a/include/ncnn/." "$TARGET/include/"
           cp "$NCNN_ROOT/arm64-v8a/lib/libncnn.a" "$TARGET/lib/arm64-v8a/"
           cp "$NCNN_ROOT/armeabi-v7a/lib/libncnn.a" "$TARGET/lib/armeabi-v7a/"
           echo "ncnn ready at $TARGET"
-          ls -la "$TARGET/lib/arm64-v8a" "$TARGET/lib/armeabi-v7a"
+          ls "$TARGET/include" | head
 
       # - name: Download YOLO model (可选)
       #   run: |
