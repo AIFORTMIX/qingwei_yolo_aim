@@ -58,7 +58,7 @@ object TouchInjector {
             im,
             "android.hardware.input.InputManager",
             "injectInputEvent",
-            arrayOf<Class<*>>(InputEvent::class.java, Int::class.javaPrimitiveType),
+            arrayOf<Class<*>>(InputEvent::class.java, Int::class.javaPrimitiveType!!),
             arrayOf(event, MODE_ASYNC)
         ) as Boolean
         return ok
