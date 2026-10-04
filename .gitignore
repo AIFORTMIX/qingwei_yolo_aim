@@ -1,0 +1,16 @@
+*.iml
+.gradle
+.idea
+.kotlin
+.DS_Store
+build
+captures
+.cxx
+local.properties
+key.jks
+
+# 原生依赖（CI 自动下载，不入库）
+app/src/main/cpp/ncnn/
+
+# CI 签名
+ci/

@@ -1,0 +1,126 @@
+name: Build APK
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/*.yml"
+  pull_request:
+  workflow_dispatch:
+  # 也可手动触发：Actions -> Build APK -> Run workflow
+
+env:
+  NCNN_VERSION: "20260526"
+  NCNN_ARCHIVE: ncnn-20260526-android-vulkan.zip
+  NCNN_DIR: /tmp/ncnn
+  # 模型文件后续手动补充到仓库后，构建即包含完整模型。
+  # 如需自动下载模型，可在此处配置下述地址格式并取消注释对应步骤。
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          # gradle 9 内置对 JDK21 完整支持
+          cache: gradle
+
+      - name: Set up Android SDK & NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK components
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-37" \
+            "build-tools;37.0.0" \
+            "cmake;3.22.1" \
+            "ndk;27.0.12077973"
+
+      - name: Download prebuilt ncnn
+        run: |
+          mkdir -p "$NCNN_DIR"
+          curl -fL -o /tmp/ncnn.zip \
+            "https://github.com/Tencent/ncnn/releases/download/${NCNN_VERSION}/${NCNN_ARCHIVE}"
+          unzip -q /tmp/ncnn.zip -d "$NCNN_DIR"
+
+      - name: Lay out ncnn into CMake search path
+        run: |
+          NCNN_ROOT="$NCNN_DIR/ncnn-${NCNN_VERSION}-android-vulkan"
+          TARGET="$GITHUB_WORKSPACE/app/src/main/cpp/ncnn"
+          # include 头文件各 ABI 一致，取 arm64-v8a 一份即可
+          mkdir -p "$TARGET/include" "$TARGET/lib/arm64-v8a" "$TARGET/lib/armeabi-v7a"
+          cp -r "$NCNN_ROOT/arm64-v8a/include/ncnn" "$TARGET/include/"
+          cp "$NCNN_ROOT/arm64-v8a/lib/libncnn.a" "$TARGET/lib/arm64-v8a/"
+          cp "$NCNN_ROOT/armeabi-v7a/lib/libncnn.a" "$TARGET/lib/armeabi-v7a/"
+          echo "ncnn ready at $TARGET"
+          ls -la "$TARGET/lib/arm64-v8a" "$TARGET/lib/armeabi-v7a"
+
+      # - name: Download YOLO model (可选)
+      #   run: |
+      #     mkdir -p "$GITHUB_WORKSPACE/app/src/main/assets/models"
+      #     curl -fL -o "$GITHUB_WORKSPACE/app/src/main/assets/models/yolov8n.param" "<PARAM_URL>"
+      #     curl -fL -o "$GITHUB_WORKSPACE/app/src/main/assets/models/yolov8n.bin" "<BIN_URL>"
+
+      - name: Configure signing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          set -e
+          # 若配置了签名密钥，则使用仓库 Secrets 签名；否则生成临时密钥，产物仍可安装。
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            export KEYSTORE_PASSWORD="ci-temp-password"
+            export KEY_ALIAS="release"
+            export KEY_PASSWORD="ci-temp-password"
+            export KEYSTORE_FILE="$RUNNER_TEMP/ci-keystore.jks"
+            keytool -genkeypair -v \
+              -keystore "$KEYSTORE_FILE" \
+              -storepass "$KEYSTORE_PASSWORD" \
+              -keypass "$KEY_PASSWORD" \
+              -alias "$KEY_ALIAS" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=CI, OU=CI, O=CI, L=CI, S=CI, C=CN" > /dev/null 2>&1
+          else
+            echo "Using repository secrets for signing (keystore must be present in workspace)"
+            export KEY_ALIAS="release"
+            export KEY_PASSWORD="$KEYSTORE_PASSWORD"
+            # Secrets 方式：需要一个命名一致的密钥库文件，这里给出约定路径
+            export KEYSTORE_FILE="$(pwd)/ci/keystore.jks"
+          fi
+          echo "KEYSTORE_FILE=$KEYSTORE_FILE" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Build debug APK (未签名的调试包)
+        run: |
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
