@@ -9,6 +9,11 @@ import androidx.lifecycle.ViewModelStoreOwner
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.lsposed.hiddenapibypass.HiddenApiBypass
+import com.example.kernelsustyleuikit.root.RootManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
 
@@ -29,6 +34,7 @@ class TemplateApplication : Application(), ViewModelStoreOwner {
 
     lateinit var okhttpClient: OkHttpClient
     private val appViewModelStore by lazy { ViewModelStore() }
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private fun isUserUnlocked(): Boolean =
         getSystemService(UserManager::class.java)?.isUserUnlocked == true
@@ -40,6 +46,9 @@ class TemplateApplication : Application(), ViewModelStoreOwner {
         if (!isUserUnlocked()) {
             return
         }
+
+        // 异步检测 root，后续瞄准会根据 RootManager.rootAvailable 优先走 root 注入
+        appScope.launch { RootManager.detect() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val prefs = this.getSharedPreferences("settings", MODE_PRIVATE)

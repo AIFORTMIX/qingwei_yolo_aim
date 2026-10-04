@@ -3,12 +3,15 @@ package com.example.kernelsustyleuikit.shizuku
 import android.os.SystemClock
 import android.view.InputEvent
 import android.view.MotionEvent
+import com.example.kernelsustyleuikit.root.RootManager
 import com.example.kernelsustyleuikit.util.Reflection
 
 /**
  * 触摸事件注入。
- * 反射注入隐藏的 InputManager.injectInputEvent（需 shell/root 身份才有 INJECT_EVENTS 权限）；
- * 默认走 Shizuku shell 的 `input swipe`（稳定，已具备 shell 权限）。
+ * 权限策略（自动降级）：
+ * 1. root：优先在本进程内直接反射调用 InputManager.injectInputEvent，从输入节点注入触摸；
+ *    若应用进程无 INJECT_EVENTS 权限导致失败，则回退 `su -c input swipe`。
+ * 2. 无 root：走 Shizuku shell 的 `input swipe`（shell 身份已具备注入权限）。
  */
 object TouchInjector {
 
@@ -25,12 +28,12 @@ object TouchInjector {
         return im
     }
 
-    /** 反射构造一串 DOWN→MOVE→UP 滑动事件并注入。 */
+    /** 本进程内反射构造 DOWN→MOVE→UP 滑动事件并注入（需应用进程具备 INJECT_EVENTS 权限）。 */
     fun swipe(
         x1: Float, y1: Float,
         x2: Float, y2: Float,
         durationMs: Long,
-    ) {
+    ): Boolean = try {
         val downTime = SystemClock.uptimeMillis()
         inject(MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x1, y1, 0))
         val steps = 16
@@ -50,6 +53,9 @@ object TouchInjector {
                 MotionEvent.ACTION_UP, x2, y2, 0
             )
         )
+        true
+    } catch (_: Throwable) {
+        false
     }
 
     fun inject(event: InputEvent): Boolean {
@@ -64,9 +70,17 @@ object TouchInjector {
         return ok
     }
 
-    /** 走 Shizuku shell `input swipe`，稳定。 */
+    /** 执行一次滑动，自动选择 root 优先 / Shizuku 回退的注入方式。 */
     suspend fun applySwipe(x1: Float, y1: Float, x2: Float, y2: Float, durationMs: Long) {
-        val cmd = "input swipe ${x1.toInt()} ${y1.toInt()} ${x2.toInt()} ${y2.toInt()} $durationMs"
-        ShizukuManager.execShell(cmd)
+        if (RootManager.rootAvailable) {
+            // 优先从输入节点直接注入；失败则用 su 执行 shell 命令兜底。
+            val ok = swipe(x1, y1, x2, y2, durationMs)
+            if (ok) return
+            val cmd = "input swipe ${x1.toInt()} ${y1.toInt()} ${x2.toInt()} ${y2.toInt()} $durationMs"
+            RootManager.execShell(cmd)
+        } else {
+            val cmd = "input swipe ${x1.toInt()} ${y1.toInt()} ${x2.toInt()} ${y2.toInt()} $durationMs"
+            ShizukuManager.execShell(cmd)
+        }
     }
 }

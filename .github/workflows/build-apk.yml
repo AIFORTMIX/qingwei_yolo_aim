@@ -136,16 +136,9 @@ jobs:
           export ANDROID_HOME="$ANDROID_SDK_ROOT"
           ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      - name: Build debug APK (未签名的调试包)
-        run: |
-          export ANDROID_HOME="$ANDROID_SDK_ROOT"
-          ./gradlew :app:assembleDebug --no-daemon
-
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: apk
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
