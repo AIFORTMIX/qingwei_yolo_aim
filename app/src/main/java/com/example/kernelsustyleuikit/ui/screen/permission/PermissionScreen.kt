@@ -71,7 +71,7 @@ fun PermissionScreen() {
 
     val actions = PermissionActions(
         onShizuku = { manager.requestShizuku() },
-        onOpenShizuku = { shizukuLauncher.launch(manager.shizukuLauncherIntent()) },
+        onOpenShizuku = { manager.shizukuLauncherIntent()?.let(shizukuLauncher::launch) },
         onNotification = {
             val perm = manager.notificationRuntimePermission()
             if (perm != null) notificationLauncher.launch(perm)

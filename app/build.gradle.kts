@@ -163,6 +163,8 @@ dependencies {
     implementation(libs.miuix.preference)
     implementation(libs.miuix.blur)
 
+    implementation(libs.material.kolor)
+
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
 }

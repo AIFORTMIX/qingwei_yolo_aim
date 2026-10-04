@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
@@ -30,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kernelsustyleuikit.R
 import com.example.kernelsustyleuikit.ui.theme.LocalEnableBlur
-import com.example.kernelsustyleuikit.util.BlurredBar
-import com.example.kernelsustyleuikit.util.rememberBlurBackdrop
+import com.example.kernelsustyleuikit.ui.util.BlurredBar
+import com.example.kernelsustyleuikit.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults

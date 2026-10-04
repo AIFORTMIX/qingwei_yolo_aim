@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -44,7 +43,7 @@ class AimController(
     private suspend fun runLoop() {
         var frames = 0
         var lastTime = System.nanoTime()
-        while (isActive && running) {
+        while (running) {
             try {
                 val frame = ScreenCapturer.capture()
                 val dets = detector?.invoke(frame.rgba, frame.width, frame.height) ?: emptyList()

@@ -32,14 +32,14 @@ object TouchInjector {
         durationMs: Long,
     ) {
         val downTime = SystemClock.uptimeMillis()
-        inject(MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x1, y1, 0f))
+        inject(MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, x1, y1, 0))
         val steps = 16
         for (i in 1..steps) {
             val t = downTime + durationMs / steps * i
             val p = i.toFloat() / steps
             val move = MotionEvent.obtain(
                 downTime, t, MotionEvent.ACTION_MOVE,
-                x1 + (x2 - x1) * p, y1 + (y2 - y1) * p, 0f
+                x1 + (x2 - x1) * p, y1 + (y2 - y1) * p, 0
             )
             inject(move)
             SystemClock.sleep(durationMs / steps)
@@ -47,7 +47,7 @@ object TouchInjector {
         inject(
             MotionEvent.obtain(
                 downTime, downTime + durationMs,
-                MotionEvent.ACTION_UP, x2, y2, 0f
+                MotionEvent.ACTION_UP, x2, y2, 0
             )
         )
     }
@@ -58,10 +58,9 @@ object TouchInjector {
             im,
             "android.hardware.input.InputManager",
             "injectInputEvent",
-            arrayOf(InputEvent::class.java, Int::class.javaPrimitiveType),
+            arrayOf<Class<*>>(InputEvent::class.java, Int::class.javaPrimitiveType),
             arrayOf(event, MODE_ASYNC)
         ) as Boolean
-        event.recycle()
         return ok
     }
 

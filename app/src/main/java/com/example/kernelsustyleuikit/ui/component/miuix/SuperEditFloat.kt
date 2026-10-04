@@ -33,6 +33,7 @@ fun SuperEditFloat(
     title: String,
     titleColor: BasicComponentColors = BasicComponentDefaults.titleColor(),
     value: Float,
+    summary: String? = null,
     summaryColor: BasicComponentColors = BasicComponentDefaults.summaryColor(),
     startAction: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
@@ -44,7 +45,7 @@ fun SuperEditFloat(
     ArrowPreference(
         title = title,
         titleColor = titleColor,
-        summary = value.toString() + suffix,
+        summary = summary ?: (value.toString() + suffix),
         summaryColor = summaryColor,
         startAction = startAction,
         modifier = modifier,

@@ -1,9 +1,6 @@
 package com.example.kernelsustyleuikit.shizuku
 
-import android.content.ComponentName
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.IBinder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
@@ -26,7 +23,6 @@ object ShizukuManager {
     fun connect() {
         if (isAvailable) {
             Shizuku.addBinderReceivedListenerSticky(emptyListener)
-            try { Shizuku.bindRequestService(conn) } catch (_: Throwable) {}
         }
     }
 
@@ -42,7 +38,11 @@ object ShizukuManager {
 
     suspend fun execShellBytes(cmd: String): ByteArray = withContext(Dispatchers.IO) {
         val process = try {
-            Shizuku.newProcess(arrayOf("/system/bin/sh", "-c", cmd), null, null)
+            // Shizuku.newProcess 是 private，用反射调用（方法签名固定：String[], String[], String）
+            val method = Shizuku::class.java.getDeclaredMethod(
+                "newProcess", Array<String>::class.java, Array<String>::class.java, String::class.java
+            ).apply { isAccessible = true }
+            method.invoke(null, arrayOf("/system/bin/sh", "-c", cmd), null, null) as Process
         } catch (e: Throwable) {
             return@withContext ("ERR:" + e.message).toByteArray()
         }
@@ -59,14 +59,7 @@ object ShizukuManager {
         Shizuku.removeRequestPermissionResultListener(l)
     }
 
-    private val conn = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {}
-        override fun onServiceDisconnected(name: ComponentName?) {}
-    }
-
     private val emptyListener = Shizuku.OnBinderReceivedListener {
-        if (isGranted) {
-            try { Shizuku.bindRequestService(conn) } catch (_: Throwable) {}
-        }
+        // 只需感知 binder 事件，无需绑定 Service
     }
 }
