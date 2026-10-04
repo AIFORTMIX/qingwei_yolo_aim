@@ -31,5 +31,7 @@ target_link_libraries(shizukuYolo
 )
 
 target_compile_options(shizukuYolo PRIVATE -fopenmp)
+# ncnn 静态库使用 OpenMP，链接期同样需要，否则会出现未定义引用。
+target_link_options(shizukuYolo PRIVATE -fopenmp)
 find_package(Threads)
 target_link_libraries(shizukuYolo Threads::Threads)

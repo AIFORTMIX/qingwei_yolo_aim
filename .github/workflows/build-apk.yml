@@ -16,7 +16,7 @@ on:
 
 env:
   NCNN_VERSION: "20260526"
-  NCNN_ARCHIVE: ncnn-20260526-android-vulkan.zip
+  NCNN_ARCHIVE: ncnn-20260526-android.zip
   NCNN_DIR: /tmp/ncnn
   # 模型文件后续手动补充到仓库后，构建即包含完整模型。
   # 如需自动下载模型，可在此处配置下述地址格式并取消注释对应步骤。
@@ -39,13 +39,24 @@ jobs:
           # gradle 9 内置对 JDK21 完整支持
           cache: gradle
 
-      - name: Set up Android SDK & NDK
-        uses: android-actions/setup-android@v3
+      # ubuntu runner 已预装 Android SDK。不借用 setup-android（其会安装已废弃的
+      # "tools" 包导致失败），直接用自带 sdkmanager 定位并安装所需组件。
+      - name: Locate sdkmanager
+        run: |
+          SDKMANAGER="$(ls -d ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+                             ${ANDROID_HOME}/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
+          if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found under ANDROID_HOME=$ANDROID_HOME"
+            exit 1
+          fi
+          echo "Using sdkmanager: $SDKMANAGER"
+          echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
 
       - name: Install SDK components
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-37" \
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" --install \
+            "platforms;android-37" \
             "build-tools;37.0.0" \
             "cmake;3.22.1" \
             "ndk;27.0.12077973"
@@ -59,7 +70,7 @@ jobs:
 
       - name: Lay out ncnn into CMake search path
         run: |
-          NCNN_ROOT="$NCNN_DIR/ncnn-${NCNN_VERSION}-android-vulkan"
+          NCNN_ROOT="$NCNN_DIR/ncnn-${NCNN_VERSION}-android"
           TARGET="$GITHUB_WORKSPACE/app/src/main/cpp/ncnn"
           # include 头文件各 ABI 一致，取 arm64-v8a 一份即可
           mkdir -p "$TARGET/include" "$TARGET/lib/arm64-v8a" "$TARGET/lib/armeabi-v7a"
