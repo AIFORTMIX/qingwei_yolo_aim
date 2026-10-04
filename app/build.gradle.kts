@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.agp.app)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.shizuku)
     id("kotlin-parcelize")
 }
 

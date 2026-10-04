@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.kotlin.serialization) apply false
-    alias(libs.plugins.shizuku) apply false
 }
 
 val androidMinSdkVersion by extra(31)
