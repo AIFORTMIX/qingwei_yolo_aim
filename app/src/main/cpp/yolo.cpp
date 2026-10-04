@@ -53,7 +53,7 @@ static void letterbox_preprocess(const unsigned char* rgba, int w, int h,
     out.fill(114.f); // letterbox 灰边
     // 重采样缩放（简单最近邻，实际项目建议 opengl/双线性）
     float* dst = (float*)out.data;
-    for (int y = 0; y < max(target, 1); y++) {
+    for (int y = 0; y < std::max(target, 1); y++) {
         int sy = (int)((y - padY) / ratio);
         if (sy < 0 || sy >= h) continue;
         for (int x = 0; x < target; x++) {
