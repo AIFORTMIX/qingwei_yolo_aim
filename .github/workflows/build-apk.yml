@@ -94,11 +94,12 @@ jobs:
           echo "ncnn ready at $TARGET"
           ls "$TARGET/include" | head
 
-      # - name: Download YOLO model (可选)
-      #   run: |
-      #     mkdir -p "$GITHUB_WORKSPACE/app/src/main/assets/models"
-      #     curl -fL -o "$GITHUB_WORKSPACE/app/src/main/assets/models/yolov8n.param" "<PARAM_URL>"
-      #     curl -fL -o "$GITHUB_WORKSPACE/app/src/main/assets/models/yolov8n.bin" "<BIN_URL>"
+      - name: Export pretrained YOLO ncnn model (COCO person)
+        # 零训练数据方案：官方 yolov8n 转 ncnn，打进 assets/models/
+        # 产物节点名不定，App 端已按索引读取(见 yolo.cpp)，天然兼容。
+        run: |
+          chmod +x tools/export_ncnn_model.sh
+          bash tools/export_ncnn_model.sh yolov8n 640
 
       - name: Configure signing
         env:

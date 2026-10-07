@@ -87,21 +87,33 @@ std::vector<Object> YoloNcnn::detect(const unsigned char* rgba, int w, int h,
     letterbox_preprocess(rgba, w, h, in, target, ratio, padX, padY);
 
     ncnn::Extractor ex = net_.create_extractor();
-    ex.input("images", in);
 
-    // YOLOv8 通常只有一个输出节点，名称为配置导出时决定。
+    // 官方预训练 yolov8 的输入 blob 名为 in0（ultralytics 导出固定），
+    // 输出 blob 名为 out0。用名字取节点，兼容性最好。
+    ex.input("in0", in);
+
+    // YOLOv8 原始输出：C = 4+nc，S = 8400。
     ncnn::Mat out;
-    ex.extract("output0", out); // 按实际 .param 中输出名调整
+    ex.extract("out0", out);
 
-    // out 形状：C = 4+nc，S = 8400（或更大）
-    int C = out.c;
-    int S = out.w * out.h;
+    // ultralytics 导出的 ncnn 输出为 2D Mat: h = 4+nc, w = 8400, c = 1。
+    // 兼容 3D 布局（c = 4+nc, w*h = 8400）。
+    int C, S;
+    const float* ptr;
+    if (out.c > 1) {
+        C = out.c;
+        S = out.w * out.h;
+        ptr = out.channel(0);
+    } else {
+        C = out.h;
+        S = out.w;
+        ptr = out.data; // 2D row-major
+    }
     int nc = C - 4;
     nc_ = nc;
 
     std::vector<Object> cand;
     cand.reserve(512);
-    const float* ptr = out.channel(0); // chw 布局
 
     for (int s = 0; s < S; s++) {
         // 该预测的类概率最大值

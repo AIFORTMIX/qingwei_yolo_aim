@@ -14,3 +14,9 @@ app/src/main/cpp/ncnn/
 
 # CI 签名
 ci/
+
+# YOLO 模型（CI 自动生成，不入库）
+app/src/main/assets/models/yolov8n.param
+app/src/main/assets/models/yolov8n.bin
+*.pt
+*_ncnn_model/
