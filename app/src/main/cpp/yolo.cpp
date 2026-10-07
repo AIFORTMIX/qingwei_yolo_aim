@@ -107,7 +107,7 @@ std::vector<Object> YoloNcnn::detect(const unsigned char* rgba, int w, int h,
     } else {
         C = out.h;
         S = out.w;
-        ptr = out.data; // 2D row-major
+        ptr = (const float*)out.data; // 2D row-major
     }
     int nc = C - 4;
     nc_ = nc;
