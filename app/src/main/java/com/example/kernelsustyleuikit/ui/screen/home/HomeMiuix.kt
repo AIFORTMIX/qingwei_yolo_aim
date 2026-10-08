@@ -88,6 +88,7 @@ fun HomePagerMiuix(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         ShizukuCard(state, actions.onShizukuClick)
+                        CameraCard(actions.onCameraClick)
                         AimControlCard(state, actions)
                         if (state.modelReady) StatusCard(state)
                     }
@@ -156,6 +157,17 @@ private fun ShizukuCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CameraCard(onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        BasicComponent(
+            title = "相机模式",
+            summary = "采集后置摄像头画面，实时识别并显示打框",
+            onClick = onClick,
+        )
     }
 }
 

@@ -21,4 +21,5 @@ data class HomeActions(
     val onShizukuClick: () -> Unit,
     val onStartAim: () -> Unit,
     val onStopAim: () -> Unit,
+    val onCameraClick: () -> Unit,
 )

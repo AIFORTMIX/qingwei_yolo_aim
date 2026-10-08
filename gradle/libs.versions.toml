@@ -16,6 +16,7 @@ apksign = "1.4"
 miuix = "0.9.2"
 okhttp = "5.3.2"
 hiddenapibypass = "6.1"
+camerax = "1.4.2"
 
 [plugins]
 agp-app = { id = "com.android.application", version.ref = "agp" }
@@ -70,3 +71,8 @@ shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizu
 hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenapibypass" }
 
 material-kolor = { group = "com.materialkolor", name = "material-kolor", version.ref = "materialKolor" }
+
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }

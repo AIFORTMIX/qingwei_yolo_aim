@@ -31,6 +31,7 @@ fun HomePager(
         onShizukuClick = { navigator.push(Route.Permissions) },
         onStartAim = { viewModel.startAim() },
         onStopAim = { viewModel.stopAim() },
+        onCameraClick = { navigator.push(Route.Camera) },
     )
 
     HomePagerMiuix(

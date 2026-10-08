@@ -167,6 +167,12 @@ dependencies {
 
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
+
+    // 相机模式：实时后置摄像头识别
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 }
 
 // 注入 Shizuku 依赖（shizuku 插件不会自动添加依赖，需显式声明）

@@ -60,6 +60,7 @@ import com.example.kernelsustyleuikit.ui.navigation3.Navigator
 import com.example.kernelsustyleuikit.ui.navigation3.Route
 import com.example.kernelsustyleuikit.ui.navigation3.rememberNavigator
 import com.example.kernelsustyleuikit.ui.screen.about.AboutScreen
+import com.example.kernelsustyleuikit.ui.screen.camera.CameraScreen
 import com.example.kernelsustyleuikit.ui.screen.colorpalette.ColorPaletteScreen
 import com.example.kernelsustyleuikit.ui.screen.home.HomePager
 import com.example.kernelsustyleuikit.ui.screen.permission.PermissionScreen
@@ -147,6 +148,7 @@ class MainActivity : ComponentActivity() {
                                 entry<Route.About> { AboutScreen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.Permissions> { PermissionScreen() }
+                                entry<Route.Camera> { CameraScreen() }
                                 entry<Route.Home> { mainScreenEntry() }
                                 entry<Route.Settings> { mainScreenEntry() }
                             }
