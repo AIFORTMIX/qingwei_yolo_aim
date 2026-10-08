@@ -98,6 +98,9 @@
     <string name="permission_shizuku_not_installed">未安装 Shizuku，请先下载 Shizuku。</string>
     <string name="permission_shizuku_available">Shizuku 正在运行，等待授权。</string>
     <string name="permission_shizuku_granted">Shizuku 已授权，可以使用。</string>
+    <string name="permission_root">Root 超级权限</string>
+    <string name="permission_root_granted">已获取 Root，优先使用输入注入与截屏</string>
+    <string name="permission_root_summary">Root 模式下无需安装 Shizuku</string>
     <string name="permission_request_shizuku">请求授权</string>
     <string name="permission_launch_shizuku">打开 Shizuku</string>
     </resources>

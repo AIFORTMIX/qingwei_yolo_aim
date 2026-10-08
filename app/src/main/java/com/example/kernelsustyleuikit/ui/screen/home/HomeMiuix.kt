@@ -103,11 +103,21 @@ private fun ShizukuCard(
     state: HomeUiState,
     onClick: () -> Unit,
 ) {
-    val ready = state.shizukuGranted
+    val ready = state.rootAvailable || state.shizukuGranted
     val iconColor = if (ready) Color(0xFF36D167) else Color(0xFFF72727)
     val containerColor = if (ready) Color(0xFFDFFAE4) else Color(0xFFF8E2E2)
     val textColor = Color(0xFF111111)
-    val summary = if (ready) "Shizuku 已授权，可执行截屏与滑动" else if (state.shizukuAvailable) "Shizuku 可用但未授权，点击申请" else "未安装/未启动 Shizuku"
+    val title = when {
+        state.rootAvailable -> "Root 已就绪"
+        state.shizukuGranted -> "授权已就绪"
+        else -> "需要授权"
+    }
+    val summary = when {
+        state.rootAvailable -> "Root 模式 · 输入注入 + 截屏已启用"
+        state.shizukuGranted -> "Shizuku 已授权，可执行截屏与滑动"
+        state.shizukuAvailable -> "Shizuku 可用但未授权，点击申请"
+        else -> "未安装/未启动 Shizuku，且未获取 Root"
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -133,7 +143,7 @@ private fun ShizukuCard(
                         contentDescription = null
                     )
                     Text(
-                        text = if (ready) "授权已就绪" else "需要 Shizuku 授权",
+                        text = title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textColor,

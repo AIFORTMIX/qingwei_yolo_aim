@@ -15,6 +15,9 @@
     <string name="permission_grant_action">去授权</string>
     <string name="permission_status_ready_title">授权已完成</string>
     <string name="permission_status_missing_title">需要完成授权</string>
+    <string name="permission_root">Root 超级权限</string>
+    <string name="permission_root_granted">已获取 Root，优先使用输入注入与截屏</string>
+    <string name="permission_root_summary">Root 模式下无需安装 Shizuku</string>
     <string name="home">主页</string>
     <string name="settings">设置</string>
     <string name="about">关于</string>

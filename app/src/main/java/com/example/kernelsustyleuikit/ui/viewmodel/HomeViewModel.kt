@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kernelsustyleuikit.aim.AimController
 import com.example.kernelsustyleuikit.aim.AimRuntime
+import com.example.kernelsustyleuikit.root.RootManager
 import com.example.kernelsustyleuikit.shizuku.ShizukuManager
 import com.example.kernelsustyleuikit.ui.screen.home.HomeUiState
 import com.example.kernelsustyleuikit.ui.screen.home.getAppVersion
@@ -30,10 +31,12 @@ class HomeViewModel : ViewModel() {
             val version = withContext(Dispatchers.IO) {
                 getAppVersion(context).versionName
             }
+            val root = RootManager.detect()
             _uiState.update {
                 it.copy(
                     shizukuAvailable = ShizukuManager.isAvailable,
                     shizukuGranted = ShizukuManager.isGranted,
+                    rootAvailable = root,
                     modelReady = modelReady,
                     modelError = if (modelReady) null else it.modelError,
                     appVersion = version,
@@ -63,14 +66,23 @@ class HomeViewModel : ViewModel() {
     }
 
     fun startAim() {
-        if (!ShizukuManager.isGranted) {
-            _uiState.update { it.copy(modelError = "请先完成 Shizuku 授权") }
-            return
+        viewModelScope.launch {
+            // Root 或 Shizuku 任一授权即可
+            val root = RootManager.detect()
+            _uiState.update { it.copy(rootAvailable = root) }
+            if (!root && !ShizukuManager.isGranted) {
+                _uiState.update { it.copy(modelError = "请先完成 Root 或 Shizuku 授权") }
+                return@launch
+            }
+            if (!modelReady) {
+                _uiState.update { it.copy(modelError = "模型未就绪") }
+                return@launch
+            }
+            startController()
         }
-        if (!modelReady) {
-            _uiState.update { it.copy(modelError = "模型未就绪") }
-            return
-        }
+    }
+
+    private fun startController() {
         val controller = AimController(
             scope = viewModelScope,
             config = AimRuntime.config,

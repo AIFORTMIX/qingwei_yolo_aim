@@ -7,6 +7,7 @@ import android.os.UserManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import com.example.kernelsustyleuikit.root.RootManager
 import com.example.kernelsustyleuikit.shizuku.ShizukuManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,12 @@ class PermissionManager(context: Context) {
 
     fun refresh() {
         _state.value = readState()
+    }
+
+    /** 重新检测 root（仅当尚未确认有 root 时真正执行 su，避免重复弹窗）。 */
+    suspend fun refreshRoot() {
+        RootManager.detect()
+        refresh()
     }
 
     /** 发起 Shizuku 授权申请。若已授权则无操作。 */
@@ -44,6 +51,7 @@ class PermissionManager(context: Context) {
     private fun readState() = PermissionState(
         shizukuAvailable = ShizukuManager.isAvailable,
         shizukuGranted = ShizukuManager.isGranted,
+        rootAvailable = RootManager.rootAvailable,
         notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             NotificationManagerCompat.from(appContext).areNotificationsEnabled() &&
                     isUserUnlocked()

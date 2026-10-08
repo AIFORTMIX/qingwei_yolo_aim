@@ -23,6 +23,7 @@ import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -36,6 +37,7 @@ import com.example.kernelsustyleuikit.R
 import com.example.kernelsustyleuikit.permission.PermissionManager
 import com.example.kernelsustyleuikit.permission.PermissionState
 import com.example.kernelsustyleuikit.ui.navigation3.LocalNavigator
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -64,8 +66,11 @@ fun PermissionScreen() {
         ActivityResultContracts.StartActivityForResult()
     ) { manager.refresh() }
 
+    val scope = rememberCoroutineScope()
+
     LifecycleResumeEffect(manager) {
-        manager.refresh()
+        // 回到页面时重新检测 root（已授权则不会重复弹窗），再刷新状态
+        scope.launch { manager.refreshRoot() }
         onPauseOrDispose { }
     }
 
@@ -154,6 +159,14 @@ private fun PermissionStatusCardMiuix(
     val icon: ImageVector
     val iconTint: androidx.compose.ui.graphics.Color
     when {
+        state.rootAvailable -> {
+            // Root 优先于 Shizuku：已提权则直接进入 Root 模式
+            title = stringResource(R.string.permission_root)
+            summary = stringResource(R.string.permission_root_granted)
+            icon = Icons.Rounded.Security
+            iconTint = androidx.compose.ui.graphics.Color(0xFF36D167)
+        }
+
         state.shizukuGranted -> {
             title = stringResource(R.string.permission_status_ready_title)
             summary = stringResource(R.string.permission_shizuku_granted)
@@ -179,7 +192,7 @@ private fun PermissionStatusCardMiuix(
     MiuixCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = {
-            if (state.shizukuGranted) return@MiuixCard
+            if (state.rootAvailable || state.shizukuGranted) return@MiuixCard
             if (state.shizukuAvailable) actions.onShizuku()
             else actions.onOpenShizuku()
         },
@@ -198,7 +211,7 @@ private fun PermissionStatusCardMiuix(
         )
     }
 
-    if (state.shizukuGranted) return
+    if (state.rootAvailable || state.shizukuGranted) return
 
     Column(
         modifier = Modifier

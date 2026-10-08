@@ -1,6 +1,8 @@
 package com.example.kernelsustyleuikit.root
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -15,20 +17,32 @@ object RootManager {
     var rootAvailable: Boolean = false
         private set
 
-    /** 检测 root 是否可用（以 `su -c id` 能否得到 uid=0 为准），不阻塞主线程。 */
+    private val detectLock = Mutex()
+
+    /** 检测 root 是否可用（以 `su -c id` 能否得到 uid=0 为准），不阻塞主线程。
+     *  幂等且并发安全：已确认有 root 时直接返回，避免重复触发 su 授权弹窗。 */
     suspend fun detect(): Boolean = withContext(Dispatchers.IO) {
-        val ok = try {
-            val process = ProcessBuilder("/system/bin/sh", "-c", "su -c id")
-                .redirectErrorStream(true)
-                .start()
-            val out = BufferedReader(InputStreamReader(process.inputStream)).readText()
-            process.waitFor()
-            out.trim().startsWith("uid=0")
-        } catch (_: Throwable) {
-            false
+        if (rootAvailable) return@withContext true
+        detectLock.withLock {
+            if (rootAvailable) return@withContext true
+            val ok = try {
+                val process = ProcessBuilder("/system/bin/sh", "-c", "su -c id")
+                    .redirectErrorStream(true)
+                    .start()
+                val out = BufferedReader(InputStreamReader(process.inputStream)).readText()
+                process.waitFor()
+                out.trim().startsWith("uid=0")
+            } catch (_: Throwable) {
+                false
+            }
+            rootAvailable = ok
+            ok
         }
-        rootAvailable = ok
-        ok
+    }
+
+    /** 主动重置 root 状态（如应用重新获取授权后），下次 detect 重新检测。 */
+    fun reset() {
+        rootAvailable = false
     }
 
     suspend fun execShell(cmd: String): String = withContext(Dispatchers.IO) {

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 data class HomeUiState(
     val shizukuAvailable: Boolean = false,
     val shizukuGranted: Boolean = false,
+    val rootAvailable: Boolean = false,
     val modelReady: Boolean = false,
     val modelError: String? = null,
     val aiming: Boolean = false,
