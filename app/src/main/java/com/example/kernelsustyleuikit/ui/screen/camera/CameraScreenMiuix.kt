@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
@@ -30,6 +31,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.kernelsustyleuikit.ui.theme.LocalEnableBlur
@@ -47,6 +50,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 @Immutable
 data class CameraActions(
@@ -153,8 +157,8 @@ private fun CameraPreview(state: CameraUiState) {
 
                 drawImage(
                     image = bitmap.asImageBitmap(),
-                    dstOffset = Offset(left, top),
-                    dstSize = Size(drawW, drawH),
+                    dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
+                    dstSize = IntSize(drawW.roundToInt(), drawH.roundToInt()),
                 )
 
                 // 检测框（坐标相对输入帧，等比换算到显示区域）
