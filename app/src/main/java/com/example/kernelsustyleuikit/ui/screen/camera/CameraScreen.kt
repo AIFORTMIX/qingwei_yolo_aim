@@ -38,13 +38,15 @@ fun CameraScreen() {
         ActivityResultContracts.RequestPermission()
     ) { ok -> granted = ok }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     // 初始化模型
     LaunchedEffect(Unit) { viewModel.start() }
 
     // key 上依赖 granted：授权完成后自动绑定相机
     LifecycleResumeEffect(granted) {
         viewModel.onPermissionResult(granted)
-        if (granted) viewModel.bindCamera(LocalLifecycleOwner.current)
+        if (granted) viewModel.bindCamera(lifecycleOwner)
         onPauseOrDispose { }
     }
 
